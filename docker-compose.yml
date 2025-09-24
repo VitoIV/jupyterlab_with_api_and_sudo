@@ -1,0 +1,63 @@
+version: "3.8"
+
+networks:
+  apps-net:
+    external: true
+
+volumes:
+  lab_home:
+
+services:
+  lab:
+    image: obsahovka/jlab2:py311
+    container_name: lab-one
+    restart: always
+    environment:
+      JUPYTER_ENABLE_LAB: "yes"
+      NB_UID: "${NB_UID}"
+      NB_GID: "${NB_GID}"
+      API_SHARED_KEY: "${API_SHARED_KEY}"
+    networks: [apps-net]
+    volumes:
+      - lab_home:/home/jovyan
+    command: >
+      start-notebook.py
+      --ServerApp.token=''
+      --ServerApp.password=''
+      --ServerApp.allow_remote_access=True
+
+  auth:
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.6.0
+    container_name: lab-auth
+    restart: always
+    depends_on: [lab]
+    networks: [apps-net]
+    ports:
+      - "127.0.0.1:18088:4180"
+    environment:
+      OAUTH2_PROXY_PROVIDER: "${OAUTH2_PROXY_PROVIDER}"
+      OAUTH2_PROXY_OIDC_ISSUER_URL: "${OAUTH2_PROXY_OIDC_ISSUER_URL}"
+      OAUTH2_PROXY_CLIENT_ID: "${OAUTH2_PROXY_CLIENT_ID}"
+      OAUTH2_PROXY_CLIENT_SECRET: "${OAUTH2_PROXY_CLIENT_SECRET}"
+      OAUTH2_PROXY_REDIRECT_URL: "${OAUTH2_PROXY_REDIRECT_URL}"
+      OAUTH2_PROXY_SCOPE: ${OAUTH2_PROXY_SCOPE}
+      OAUTH2_PROXY_OIDC_EXTRA_AUDIENCES: ${OAUTH2_PROXY_OIDC_EXTRA_AUDIENCES}
+      OAUTH2_PROXY_CODE_CHALLENGE_METHOD: "${OAUTH2_PROXY_CODE_CHALLENGE_METHOD}"
+      OAUTH2_PROXY_UPSTREAMS: "${OAUTH2_PROXY_UPSTREAMS}"
+      OAUTH2_PROXY_HTTP_ADDRESS: "${OAUTH2_PROXY_HTTP_ADDRESS}"
+      OAUTH2_PROXY_REVERSE_PROXY: "${OAUTH2_PROXY_REVERSE_PROXY}"
+      OAUTH2_PROXY_PASS_USER_HEADERS: "${OAUTH2_PROXY_PASS_USER_HEADERS}"
+      OAUTH2_PROXY_SET_XAUTHREQUEST: "${OAUTH2_PROXY_SET_XAUTHREQUEST}"
+      OAUTH2_PROXY_EMAIL_DOMAINS: "${OAUTH2_PROXY_EMAIL_DOMAINS}"
+      OAUTH2_PROXY_COOKIE_SECURE: "${OAUTH2_PROXY_COOKIE_SECURE}"
+      OAUTH2_PROXY_COOKIE_SAMESITE: "${OAUTH2_PROXY_COOKIE_SAMESITE}"
+      OAUTH2_PROXY_COOKIE_EXPIRE: "${OAUTH2_PROXY_COOKIE_EXPIRE}"
+      OAUTH2_PROXY_COOKIE_NAME: "${OAUTH2_PROXY_COOKIE_NAME}"
+      OAUTH2_PROXY_COOKIE_SECRET: "${OAUTH2_PROXY_COOKIE_SECRET}"
+      OAUTH2_PROXY_REDIRECT_TO_LOGIN: "${OAUTH2_PROXY_REDIRECT_TO_LOGIN}"
+      OAUTH2_PROXY_SKIP_PROVIDER_BUTTON: "${OAUTH2_PROXY_SKIP_PROVIDER_BUTTON}"
+      OAUTH2_PROXY_SKIP_AUTH_ROUTES: "${OAUTH2_PROXY_SKIP_AUTH_ROUTES}"
+    command:
+      - "--standard-logging"
+      - "--request-logging"
+      - "--auth-logging"
