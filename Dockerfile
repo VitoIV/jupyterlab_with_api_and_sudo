@@ -9,7 +9,8 @@ RUN pip install --no-cache-dir \
     "uvicorn[standard]"
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends sudo \
+ && apt-get install -y --no-install-recommends sudo curl ca-certificates \
+ && update-ca-certificates \
  && rm -rf /var/lib/apt/lists/* \
  && printf "jovyan ALL=(ALL) NOPASSWD:ALL\n" > /etc/sudoers.d/010_jovyan-nopasswd \
  && chmod 0440 /etc/sudoers.d/010_jovyan-nopasswd
